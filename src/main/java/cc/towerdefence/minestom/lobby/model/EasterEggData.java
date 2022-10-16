@@ -1,4 +1,4 @@
 package cc.towerdefence.minestom.lobby.model;
 
-public class LobbyUser {
+public class EasterEggData {
 }

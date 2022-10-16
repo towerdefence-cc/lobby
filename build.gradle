@@ -1,0 +1,54 @@
+plugins {
+    java
+    id("com.google.protobuf") version "0.8.12"
+    id("io.freefair.lombok") version "6.1.0"
+}
+
+group = "cc.towerdefence.minestom.lobby"
+version = "1.0-SNAPSHOT"
+
+repositories {
+    mavenCentral()
+    mavenLocal() // In maven local: openmatch.frontend
+    maven("https://jitpack.io")
+}
+
+dependencies {
+    // gRPC
+    runtimeOnly("io.grpc:grpc-netty-shaded:1.49.1")
+    implementation("io.grpc:grpc-protobuf:1.49.1")
+    implementation("io.grpc:grpc-stub:1.49.1")
+    compileOnly("org.apache.tomcat:annotations-api:6.0.53")// necessary for Java 9+
+
+    implementation("com.github.ZakShearman:Minestom:9c98fe0f23")
+//    implementation("cc.towerdefence.openmatch:frontend:1.0")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.0.5")
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+}
+
+protobuf {
+    protobuf {
+        artifact = "com.google.protobuf:protoc:${rootProject.ext["protobufVersion"]}"
+    }
+    plugins {
+        id("grpc") {
+            artifact = "io.grpc:protoc-gen-grpc-java:${rootProject.ext["grpcVersion"]}"
+        }
+    }
+    generateProtoTasks {
+        all().forEach {
+            it.plugins {
+                id("grpc")
+            }
+            it.builtins {
+                id("kotlin")
+            }
+        }
+    }
+}
+
+tasks.getByName<Test>("test") {
+    useJUnitPlatform()
+}
