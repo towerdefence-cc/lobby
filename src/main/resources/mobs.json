@@ -1,0 +1,87 @@
+[
+  {
+    "type": "minecraft:parrot",
+    "pos": {
+      "x": 0.5,
+      "y": 68,
+      "z": 1.5,
+      "yaw": -135
+    },
+    "meta": {
+      "sitting": true
+    }
+  },
+  {
+    "type": "minecraft:parrot",
+    "pos": {
+      "x": -18.5,
+      "y": 73,
+      "z": -8.5,
+      "yaw": -90
+    },
+    "meta": {
+      "sitting": true
+    }
+  },
+  {
+    "type": "minecraft:parrot",
+    "pos": {
+      "x": -37.5,
+      "y": 74,
+      "z": -27.5,
+      "yaw": -67
+    },
+    "meta": {
+      "sitting": true
+    }
+  },
+  {
+    "type": "minecraft:parrot",
+    "pos": {
+      "x": 24.5,
+      "y": 76,
+      "z": 39.5,
+      "yaw": 157
+    },
+    "meta": {
+      "sitting": true
+    }
+  },
+  {
+    "type": "minecraft:parrot",
+    "pos": {
+      "x": -35.5,
+      "y": 94,
+      "z": 25.5,
+      "yaw": 135
+    },
+    "meta": {
+      "sitting": true
+    }
+  },
+  {
+    "type": "minecraft:parrot",
+    "pos": {
+      "x": 29.5,
+      "y": 71,
+      "z": 13.5,
+      "yaw": 157
+    },
+    "meta": {
+      "sitting": true
+    }
+  },
+  {
+    "type": "minecraft:parrot",
+    "pos": {
+      "x": -15.5,
+      "y": 110,
+      "z": 26.5,
+      "yaw": 0
+    },
+    "meta": {
+      "sitting": true,
+      "customName": "<rainbow>Sparkle"
+    }
+  }
+]

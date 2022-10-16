@@ -1,4 +1,4 @@
-package cc.towerdefence.minestom.lobby.config.model;
+package cc.towerdefence.minestom.lobby.lobbymob.config.model;
 
 import com.google.gson.JsonObject;
 import net.minestom.server.coordinate.Pos;

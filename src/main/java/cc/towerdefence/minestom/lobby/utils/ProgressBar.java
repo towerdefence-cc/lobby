@@ -11,6 +11,6 @@ public class ProgressBar {
         int incompleteCharacters = (int) Math.floor((1 - percentage) * charCount);
 
         return Component.text(character.repeat(completeCharacters), TextColor.color(completeColour))
-                        .append(Component.text(character.repeat(incompleteCharacters), TextColor.color(incompleteColour)));
+                .append(Component.text(character.repeat(incompleteCharacters), TextColor.color(incompleteColour)));
     }
 }

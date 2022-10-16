@@ -1,4 +1,16 @@
 package cc.towerdefence.minestom.lobby.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class EasterEggData {
+    private boolean parkourParrot;
+    private boolean fireworkGadget;
+    private boolean volcanoGadget;
 }

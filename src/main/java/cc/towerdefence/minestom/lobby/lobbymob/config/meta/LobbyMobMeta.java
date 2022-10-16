@@ -2,11 +2,14 @@ package cc.towerdefence.minestom.lobby.lobbymob.config.meta;
 
 import com.google.gson.JsonObject;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.metadata.EntityMeta;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class LobbyMobMetaModifier {
+public class LobbyMobMeta {
+    private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
+
     private final @Nullable Boolean onFire;
     private final @Nullable Boolean sneaking;
     private final @Nullable Boolean sprinting;
@@ -22,7 +25,7 @@ public abstract class LobbyMobMetaModifier {
     private final @Nullable Entity.Pose pose;
     private final @Nullable Integer tickFrozen;
 
-    public LobbyMobMetaModifier(JsonObject json) {
+    public LobbyMobMeta(JsonObject json) {
         this.onFire = json.has("onFire") ? json.get("onFire").getAsBoolean() : null;
         this.sneaking = json.has("sneaking") ? json.get("sneaking").getAsBoolean() : null;
         this.sprinting = json.has("sprinting") ? json.get("sprinting").getAsBoolean() : null;
@@ -31,7 +34,7 @@ public abstract class LobbyMobMetaModifier {
         this.glowingEffect = json.has("glowingEffect") ? json.get("glowingEffect").getAsBoolean() : null;
         this.flyingWithElytra = json.has("flyingWithElytra") ? json.get("flyingWithElytra").getAsBoolean() : null;
         this.airTicks = json.has("airTicks") ? json.get("airTicks").getAsInt() : null;
-        this.customName = json.has("customName") ? Component.text(json.get("customName").getAsString()) : null;
+        this.customName = json.has("customName") ? MINI_MESSAGE.deserialize(json.get("customName").getAsString()) : null;
         this.customNameVisible = json.has("customNameVisible") ? json.get("customNameVisible").getAsBoolean() : null;
         this.silent = json.has("silent") ? json.get("silent").getAsBoolean() : null;
         this.noGravity = json.has("noGravity") ? json.get("noGravity").getAsBoolean() : null;
