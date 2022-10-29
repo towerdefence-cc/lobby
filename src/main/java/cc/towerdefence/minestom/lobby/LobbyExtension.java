@@ -3,7 +3,6 @@ package cc.towerdefence.minestom.lobby;
 import cc.towerdefence.minestom.lobby.blockhandler.SignHandler;
 import cc.towerdefence.minestom.lobby.blockhandler.SkullHandler;
 import cc.towerdefence.minestom.lobby.cache.LobbyUserCache;
-import cc.towerdefence.minestom.lobby.command.PerformanceCommand;
 import cc.towerdefence.minestom.lobby.command.SpawnCommand;
 import cc.towerdefence.minestom.lobby.eastereggs.ParkourParrotEasterEgg;
 import cc.towerdefence.minestom.lobby.lobbymob.LobbyMobManager;
@@ -64,7 +63,6 @@ public final class LobbyExtension extends Extension {
         new ParkourParrotEasterEgg(this);
 
         MinecraftServer.getCommandManager().register(new SpawnCommand());
-        MinecraftServer.getCommandManager().register(new PerformanceCommand(this));
     }
 
     // todo dimension maybe for static lighting?
