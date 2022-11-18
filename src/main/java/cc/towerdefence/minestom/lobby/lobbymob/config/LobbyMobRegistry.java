@@ -1,10 +1,10 @@
 package cc.towerdefence.minestom.lobby.lobbymob.config;
 
-import cc.towerdefence.minestom.lobby.LobbyExtension;
 import cc.towerdefence.minestom.lobby.lobbymob.config.model.LobbyMobConfig;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import lombok.SneakyThrows;
 
 import java.io.InputStreamReader;
 import java.util.HashSet;
@@ -13,8 +13,9 @@ import java.util.Set;
 public class LobbyMobRegistry {
     private final Set<LobbyMobConfig> mobs;
 
-    public LobbyMobRegistry(LobbyExtension extension) {
-        JsonElement jsonElement = JsonParser.parseReader(new InputStreamReader(extension.getPackagedResource("mobs.json")));
+    @SneakyThrows
+    public LobbyMobRegistry() {
+        JsonElement jsonElement = JsonParser.parseReader(new InputStreamReader(LobbyMobRegistry.class.getClassLoader().getResourceAsStream("mobs.json")));
 
         Set<LobbyMobConfig> mobs = new HashSet<>();
         for (JsonElement entityJsonElement : jsonElement.getAsJsonArray()) {

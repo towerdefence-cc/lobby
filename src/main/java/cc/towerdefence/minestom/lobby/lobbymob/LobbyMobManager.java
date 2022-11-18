@@ -1,6 +1,6 @@
 package cc.towerdefence.minestom.lobby.lobbymob;
 
-import cc.towerdefence.minestom.lobby.LobbyExtension;
+import cc.towerdefence.minestom.lobby.LobbyModule;
 import cc.towerdefence.minestom.lobby.lobbymob.config.LobbyMobRegistry;
 import cc.towerdefence.minestom.lobby.lobbymob.config.model.LobbyMobConfig;
 import net.minestom.server.entity.Entity;
@@ -10,10 +10,10 @@ import org.jetbrains.annotations.NotNull;
 public class LobbyMobManager {
     private final @NotNull Instance instance;
 
-    public LobbyMobManager(@NotNull LobbyExtension extension) {
-        this.instance = extension.getLobbyInstance();
+    public LobbyMobManager(@NotNull LobbyModule module) {
+        this.instance = module.getLobbyInstance();
 
-        LobbyMobRegistry lobbyMobRegistry = new LobbyMobRegistry(extension);
+        LobbyMobRegistry lobbyMobRegistry = new LobbyMobRegistry();
 
         for (LobbyMobConfig lobbyMobConfig : lobbyMobRegistry.getMobs()) this.createMob(lobbyMobConfig);
     }

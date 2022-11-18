@@ -1,5 +1,0 @@
-{
-  "entrypoint": "cc.towerdefence.minestom.lobby.LobbyExtension",
-  "name": "Lobby",
-  "version": "1.0.0"
-}

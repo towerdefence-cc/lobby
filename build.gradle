@@ -2,7 +2,7 @@ plugins {
     id("java")
     id("io.freefair.lombok") version "6.5.1"
     id("com.github.johnrengelman.shadow") version "7.1.2"
-    id "application"
+    id("application")
 }
 
 group = "cc.towerdefence.minestom.lobby"
@@ -12,25 +12,31 @@ repositories {
     mavenCentral()
     mavenLocal() // In maven local: openmatch.frontend
     maven { url = "https://jitpack.io" }
+    maven { url = "https://repo.towerdefence.cc/releases" }
+    maven { url = "https://repo.towerdefence.cc/snapshots" }
 }
 
 dependencies {
-    compileOnly("cc.towerdefence.minestom:base:1.0.0")
+    implementation("cc.towerdefence.minestom:core:963155d")
     implementation("net.kyori:adventure-text-minimessage:4.11.0")
 //    implementation("cc.towerdefence.openmatch:frontend:1.0")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.1")
 
-    testImplementation("cc.towerdefence.minestom:base:1.0.0")
+    testImplementation("cc.towerdefence.minestom:core:bf0d3c8")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
 
-compileJava.options.encoding = 'UTF-8'
+compileJava.options.encoding = "UTF-8"
 
 application {
     mainClass = "cc.towerdefence.minestom.lobby.LobbyServer"
 }
 
-tasks.named("test") {
+shadowJar {
+    mergeServiceFiles()
+}
+
+test {
     useJUnitPlatform()
 }

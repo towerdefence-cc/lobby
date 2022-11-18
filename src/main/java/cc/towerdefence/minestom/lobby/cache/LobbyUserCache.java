@@ -1,6 +1,6 @@
 package cc.towerdefence.minestom.lobby.cache;
 
-import cc.towerdefence.minestom.lobby.LobbyExtension;
+import cc.towerdefence.minestom.lobby.LobbyModule;
 import cc.towerdefence.minestom.lobby.model.LobbyUser;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
@@ -15,9 +15,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LobbyUserCache {
     private final Map<UUID, LobbyUser> lobbyUsers = new ConcurrentHashMap<>();
 
-    public LobbyUserCache(LobbyExtension extension) {
-        extension.getEventNode().addListener(PlayerLoginEvent.class, event -> this.load(event.getPlayer().getUuid()));
-        extension.getEventNode().addListener(PlayerDisconnectEvent.class, event -> this.invalidate(event.getPlayer().getUuid()));
+    public LobbyUserCache(LobbyModule module) {
+        module.getEventNode().addListener(PlayerLoginEvent.class, event -> this.load(event.getPlayer().getUuid()));
+        module.getEventNode().addListener(PlayerDisconnectEvent.class, event -> this.invalidate(event.getPlayer().getUuid()));
 
         MinecraftServer.getSchedulerManager().buildShutdownTask(this::invalidateAll);
     }

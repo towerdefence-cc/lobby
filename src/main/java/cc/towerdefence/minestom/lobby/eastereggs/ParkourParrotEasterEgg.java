@@ -1,8 +1,9 @@
 package cc.towerdefence.minestom.lobby.eastereggs;
 
-import cc.towerdefence.minestom.lobby.LobbyExtension;
+import cc.towerdefence.minestom.lobby.LobbyModule;
 import cc.towerdefence.minestom.lobby.cache.LobbyUserCache;
 import cc.towerdefence.minestom.lobby.model.LobbyUser;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.coordinate.Pos;
@@ -18,6 +19,7 @@ import net.minestom.server.event.player.PlayerStartFlyingEvent;
 import net.minestom.server.event.player.PlayerStartFlyingWithElytraEvent;
 import net.minestom.server.event.player.PlayerStopFlyingEvent;
 import net.minestom.server.event.player.PlayerStopFlyingWithElytraEvent;
+import net.minestom.server.sound.SoundEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jglrxavpok.hephaistos.nbt.NBT;
 
@@ -26,11 +28,11 @@ import java.util.Map;
 public class ParkourParrotEasterEgg {
     private final LobbyUserCache lobbyUserCache;
 
-    public ParkourParrotEasterEgg(@NotNull LobbyExtension extension) {
-        this.lobbyUserCache = extension.getLobbyUserCache();
+    public ParkourParrotEasterEgg(@NotNull LobbyModule module) {
+        this.lobbyUserCache = module.getLobbyUserCache();
 
-        this.activationListeners(extension.getEventNode());
-        this.rewardListeners(extension.getEventNode());
+        this.activationListeners(module.getEventNode());
+        this.rewardListeners(module.getEventNode());
     }
 
     private void rewardListeners(@NotNull EventNode<Event> eventNode) {
@@ -48,6 +50,8 @@ public class ParkourParrotEasterEgg {
                     .append(Component.text("You found the parkour parrot easter egg!", NamedTextColor.GREEN))
                     .append(Component.newline())
                     .append(Component.text("You now have a parrot on your shoulder :)", NamedTextColor.GREEN)));
+
+            player.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.PLAYER, 1, 1));
         });
     }
 
