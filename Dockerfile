@@ -1,17 +1,9 @@
-FROM gradle:7.2.0-jdk17 AS build
-
-WORKDIR /home/gradle/src
-
-COPY --chown=gradle:gradle . .
-
-RUN gradle clean shadowJar
-
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-alpine
 
 RUN mkdir /app
-
-COPY --from=build /home/gradle/src/build/libs/*.jar /app/minestom-lobby.jar
-copy run/world /app/world/
 WORKDIR /app
+
+COPY build/libs/*-all.jar /app/minestom-lobby.jar
+COPY run/world /app/world/
 
 CMD ["java", "-jar", "/app/minestom-lobby.jar"]
