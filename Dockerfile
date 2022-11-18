@@ -3,7 +3,7 @@ FROM gradle:7.2.0-jdk17 AS build
 WORKDIR /home/gradle/src
 COPY --chown=gradle:gradle build.gradle settings.gradle.kts ./
 
-RUN gradle build
+RUN gradle build --refresh-dependencies
 
 COPY --chown=gradle:gradle . .
 

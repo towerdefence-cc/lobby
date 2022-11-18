@@ -10,6 +10,8 @@ import cc.towerdefence.minestom.lobby.menus.ServerSelectorMenu;
 import cc.towerdefence.minestom.module.Module;
 import cc.towerdefence.minestom.module.ModuleData;
 import cc.towerdefence.minestom.module.ModuleEnvironment;
+import cc.towerdefence.minestom.module.kubernetes.KubernetesModule;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.GameMode;
@@ -64,7 +66,7 @@ public final class LobbyModule extends Module {
                 .addListener(PlayerBlockPlaceEvent.class, event -> event.setCancelled(true));
 
         new LobbyMobManager(this);
-        new ServerSelectorMenu(this);
+        new ServerSelectorMenu(this, new CoreV1Api(this.moduleManager.getModule(KubernetesModule.class).getApiClient()));
         new ParkourParrotEasterEgg(this);
 
         MinecraftServer.getCommandManager().register(new SpawnCommand());

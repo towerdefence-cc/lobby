@@ -15,6 +15,9 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.Empty;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1Pod;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -28,22 +31,29 @@ import net.minestom.server.inventory.click.ClickType;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class ServerSelectorMenu {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServerSelectorMenu.class);
+    private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
+    
     private static final ItemStack HOTBAR_ITEM = ItemStack.builder(Material.COMPASS)
-            .displayName(MiniMessage.miniMessage().deserialize("<light_purple>Server Selector").decoration(TextDecoration.ITALIC, false))
+            .displayName(MINI_MESSAGE.deserialize("<light_purple>Server Selector").decoration(TextDecoration.ITALIC, false))
             .build();
 
     private static final ItemStack TOWER_DEFENCE_ITEM = ItemStack.builder(Material.STONE_BRICKS)
-            .displayName(MiniMessage.miniMessage().deserialize("<color:#c98fff>Tower Defence").decoration(TextDecoration.ITALIC, false))
+            .displayName(MINI_MESSAGE.deserialize("<color:#c98fff>Tower Defence").decoration(TextDecoration.ITALIC, false))
             .build();
 
-    private static final Component INVENTORY_TITLE = MiniMessage.miniMessage().deserialize("<dark_purple>Server Selector");
+    private static final Component INVENTORY_TITLE = MINI_MESSAGE.deserialize("<dark_purple>Server Selector");
 
-    private final PlayerTrackerGrpc.PlayerTrackerFutureStub playerTrackerService;
     private final LoadingCache<String, VelocityServerGrpc.VelocityServerFutureStub> velocityServiceCache = Caffeine.newBuilder()
             .expireAfterAccess(5, TimeUnit.MINUTES)
             .build(key -> {
@@ -54,15 +64,18 @@ public class ServerSelectorMenu {
                 return VelocityServerGrpc.newFutureStub(channel);
             });
 
+    private final PlayerTrackerGrpc.PlayerTrackerFutureStub playerTrackerService;
+    private final CoreV1Api kubernetesClient;
+
     private final LobbyUserCache lobbyUserCache;
 
-    public ServerSelectorMenu(LobbyModule module) {
+    public ServerSelectorMenu(LobbyModule module, CoreV1Api kubernetesClient) {
         ManagedChannel managedChannel = ManagedChannelBuilder.forAddress("player-tracker.towerdefence.svc", 9090)
                 .defaultLoadBalancingPolicy("round_robin")
                 .usePlaintext()
                 .build();
         this.playerTrackerService = PlayerTrackerGrpc.newFutureStub(managedChannel);
-
+        this.kubernetesClient = kubernetesClient;
         this.lobbyUserCache = module.getLobbyUserCache();
 
         module.getEventNode()
@@ -84,7 +97,7 @@ public class ServerSelectorMenu {
 
                     if (event.getClickedItem() == TOWER_DEFENCE_ITEM) {
                         player.closeInventory();
-                        player.sendMessage(MiniMessage.miniMessage().deserialize("<light_purple>Connecting you to <color:#c98fff>tower defence<light_purple>..."));
+                        player.sendMessage(MINI_MESSAGE.deserialize("<light_purple>Connecting you to <color:#c98fff>tower defence<light_purple>..."));
                         this.sendToTowerDefence(player);
                     } else if (event.getSlot() == 8) { // quick join button
                         LobbyUser lobbyUser = this.lobbyUserCache.getUser(player.getUuid());
@@ -106,45 +119,68 @@ public class ServerSelectorMenu {
 
     private ItemStack createQuickJoinItem(@NotNull LobbyUser lobbyUser) {
         return ItemStack.builder(lobbyUser.isQuickJoin() ? Material.GREEN_WOOL : Material.RED_WOOL)
-                .displayName(MiniMessage.miniMessage().deserialize("<light_purple>Quick Join: " + (lobbyUser.isQuickJoin() ? "<green>Enabled" : "<red>Disabled")).decoration(TextDecoration.ITALIC, false))
+                .displayName(MINI_MESSAGE.deserialize("<light_purple>Quick Join: " + (lobbyUser.isQuickJoin() ? "<green>Enabled" : "<red>Disabled")).decoration(TextDecoration.ITALIC, false))
                 .lore(
                         Component.empty(),
-                        MiniMessage.miniMessage().deserialize("<light_purple>Allows you to join ongoing games").decoration(TextDecoration.ITALIC, false),
-                        MiniMessage.miniMessage().deserialize("<light_purple>with space for more players.").decoration(TextDecoration.ITALIC, false)
+                        MINI_MESSAGE.deserialize("<light_purple>Allows you to join ongoing games").decoration(TextDecoration.ITALIC, false),
+                        MINI_MESSAGE.deserialize("<light_purple>with space for more players.").decoration(TextDecoration.ITALIC, false)
                 )
                 .build();
     }
 
-    private void sendToTowerDefence(Player player) {
+    // todo this can be optimised to cache earlier - by id - instead of by ip. This will mean less queries to the k8s api
+    private void sendToTowerDefence(@NotNull Player player) {
         LobbyUser lobbyUser = this.lobbyUserCache.getUser(player.getUuid());
 
-        ListenableFuture<PlayerTrackerProto.GetPlayerServerResponse> serverResponseFuture = this.playerTrackerService.getPlayerServer(
-                PlayerTrackerProto.PlayerRequest.newBuilder()
-                        .setPlayerId(String.valueOf(player.getUuid())).build()
-        );
+        this.getProxyIpForPlayer(player.getUuid(), optionalIp -> {
+            if (optionalIp.isEmpty()) {
+                player.sendMessage(MINI_MESSAGE.deserialize("<red>Failed to find your current server."));
+                return;
+            }
 
-        Futures.addCallback(serverResponseFuture, FunctionalFutureCallback.create(
-                serverResponse -> {
-                    String serverId = serverResponse.getServer().getServerId();
-                    VelocityServerGrpc.VelocityServerFutureStub velocityService = this.velocityServiceCache.get(serverId);
+            String proxyIp = optionalIp.get();
+            VelocityServerGrpc.VelocityServerFutureStub velocityService = this.velocityServiceCache.get(proxyIp);
 
-                    ListenableFuture<Empty> swapServerResponse = velocityService.swapTowerDefence(VelocityServerProto.TowerDefenceSwapRequest.newBuilder()
-                            .setPlayerId(player.getUuid().toString())
-                            .setQuickJoin(lobbyUser.isQuickJoin()).build());
-                    this.handleSwapServerResponse(swapServerResponse, player);
-                },
-                throwable -> {
-                    player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Failed to identify your current server."));
-                }
-        ), ForkJoinPool.commonPool());
+            ListenableFuture<Empty> swapServerResponse = velocityService.swapTowerDefence(VelocityServerProto.TowerDefenceSwapRequest.newBuilder()
+                    .setPlayerId(player.getUuid().toString())
+                    .setQuickJoin(lobbyUser.isQuickJoin()).build());
+            this.handleSwapServerResponse(swapServerResponse, player);
+        });
     }
 
     private void handleSwapServerResponse(ListenableFuture<Empty> listenableFuture, Player player) {
         Futures.addCallback(listenableFuture, FunctionalFutureCallback.create(
                 empty -> {},
                 throwable -> {
-                    player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Failed to connect to Tower Defence."));
+                    throwable.printStackTrace();
+                    player.sendMessage(MINI_MESSAGE.deserialize("<red>Failed to connect to Tower Defence."));
                 }
+        ), ForkJoinPool.commonPool());
+    }
+
+    public void getProxyIpForPlayer(UUID playerId, Consumer<Optional<String>> callback) {
+        ListenableFuture<PlayerTrackerProto.GetPlayerServerResponse> serverResponseFuture = this.playerTrackerService.getPlayerServer(
+                PlayerTrackerProto.PlayerRequest.newBuilder()
+                        .setPlayerId(String.valueOf(playerId)).build()
+        );
+
+        Futures.addCallback(serverResponseFuture, FunctionalFutureCallback.create(
+                serverResponse -> {
+                    if (!serverResponse.hasServer()) {
+                        callback.accept(Optional.empty());
+                        return;
+                    }
+                    String proxyId = serverResponse.getServer().getProxyId();
+
+                    try {
+                        V1Pod pod = this.kubernetesClient.readNamespacedPod(proxyId, "towerdefence", null);
+                        callback.accept(Optional.ofNullable(pod.getStatus().getPodIP()));
+                    } catch (ApiException e) {
+                        LOGGER.error("Failed to get pod for proxy id {}:\nK8s Error: ({}) {}\n{}", proxyId, e.getCode(), e.getResponseBody(), e);
+                        callback.accept(Optional.empty());
+                    }
+                },
+                throwable -> callback.accept(Optional.empty())
         ), ForkJoinPool.commonPool());
     }
 }
