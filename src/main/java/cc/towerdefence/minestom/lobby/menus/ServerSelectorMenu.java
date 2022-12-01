@@ -101,7 +101,7 @@ public class ServerSelectorMenu {
                     Player player = event.getPlayer();
                     event.setCancelled(true);
 
-                    if (event.getClickedItem() == this.towerDefenceItem) {
+                    if (event.getSlot() == 4) {
                         player.closeInventory();
                         player.sendMessage(MINI_MESSAGE.deserialize("<light_purple>Connecting you to <color:#c98fff>tower defence<light_purple>..."));
                         this.sendToTowerDefence(player);
